@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "package": "dev.viking602.watut.probe.mixin",
+  "compatibilityLevel": "JAVA_25",
+  "client": [
+    "ParticleProbeMixin",
+    "ModelProbeMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "minVersion": "0.8"
+}

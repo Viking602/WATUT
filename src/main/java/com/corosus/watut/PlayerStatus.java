@@ -78,7 +78,7 @@ public class PlayerStatus {
         }
 
         public static PlayerGuiState get(int intValue) {
-            return lookup.get(intValue);
+            return lookup.getOrDefault(intValue, values()[0]);
         }
     }
 
@@ -97,7 +97,7 @@ public class PlayerStatus {
         }
 
         public static PlayerChatState get(int intValue) {
-            return lookup.get(intValue);
+            return lookup.getOrDefault(intValue, values()[0]);
         }
     }
 
@@ -175,7 +175,7 @@ public class PlayerStatus {
     public float getPartialLerp(float partialTick) {
         float lerpPrev = (lerpTicksPrev / lerpTicksMax);
         float lerp = (lerpTicks / lerpTicksMax);
-        return Math.min(lerpPrev + ((lerp - lerpPrev) * partialTick), lerpTicksMax);
+        return Math.clamp(lerpPrev + ((lerp - lerpPrev) * partialTick), 0F, 1F);
     }
 
     public void resetParticles() {
@@ -187,6 +187,7 @@ public class PlayerStatus {
 
     public void reset() {
         resetParticles();
+        if (screenData != null) { screenData.close(); screenData = null; }
         WatutMod.dbg("remove trigger for " + this);
         ticksSinceLastAction = 0;
     }

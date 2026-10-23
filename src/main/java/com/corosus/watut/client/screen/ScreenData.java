@@ -7,7 +7,7 @@ import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.particle.ParticleRenderType;
+
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.client.renderer.texture.TextureManager;
@@ -32,7 +32,7 @@ public class ScreenData {
     private long gameTicksSinceLastScreenSend = 0;
     private long gameTicksSinceLastScreenReceiveAndRender = 0;
 
-    private ParticleRenderType particleRenderType;
+    private net.minecraft.client.particle.SingleQuadParticle.Layer particleRenderType;
 
     private boolean needsNewRenderFromPixelData = false;
 
@@ -46,41 +46,25 @@ public class ScreenData {
     //since gui states are kinda old system and require specifically adding support for a screen, we use this instead to track true differences now
     private Screen lastScreen;
 
+    private static final java.util.concurrent.atomic.AtomicInteger NEXT_TEXTURE = new java.util.concurrent.atomic.AtomicInteger();
+    private final net.minecraft.resources.Identifier textureId = net.minecraft.resources.Identifier.fromNamespaceAndPath("watut", "screen/" + NEXT_TEXTURE.getAndIncrement());
+    public net.minecraft.resources.Identifier getTextureId() { return textureId; }
     public void initClient() {
-
-        this.particleRenderType = new ParticleRenderType() {
-            public @Nullable BufferBuilder begin(Tesselator tesselator, TextureManager textureManager) {
-                //oculus breaks our shader for some reason
-                if (RenderHelper.isShadersEnabled()) {
-                    RenderSystem.setShader(GameRenderer::getParticleShader);
-                } else {
-                    RenderSystem.setShader(() -> PlayerStatusManagerClient.particle);
-                }
-                RenderSystem._setShaderTexture(0, getImage().getId());
-
-                RenderSystem.depthMask(true);
-                RenderSystem.enableBlend();
-                RenderSystem.defaultBlendFunc();
-                RenderSystem.disableCull();
-                return tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.PARTICLE);
-            }
-
-            public String toString() {
-                return "DYNAMIC_TEXTURE";
-            }
-        };
-
-        //WatutMod.instance().addParticleRenderType(particleRenderType);
-
+        particleRenderType = new net.minecraft.client.particle.SingleQuadParticle.Layer(true, textureId, com.corosus.watut.client.WatutRenderPipelines.TRANSLUCENT);
     }
-
+    public void close() {
+        closeImage();
+        if (decompressionBuffer != null) { MemoryUtil.memFree(decompressionBuffer); decompressionBuffer = null; }
+        texturePixelData = null; texturePixelDataPartial = null;
+        isBufferReady.set(false);
+    }
     public ByteBuffer getTexturePixelData() {
         return texturePixelData;
     }
 
     public void freeTexturePixelData() {
         if (texturePixelData != null) {
-            MemoryUtil.memFree(texturePixelData);
+            texturePixelData = null;
         }
     }
 
@@ -88,11 +72,11 @@ public class ScreenData {
         this.texturePixelData = texturePixelData;
     }
 
-    public ParticleRenderType getParticleRenderType() {
+    public net.minecraft.client.particle.SingleQuadParticle.Layer getParticleRenderType() {
         return particleRenderType;
     }
 
-    public void setParticleRenderType(ParticleRenderType particleRenderType) {
+    public void setParticleRenderType(net.minecraft.client.particle.SingleQuadParticle.Layer particleRenderType) {
         this.particleRenderType = particleRenderType;
     }
 
@@ -170,11 +154,13 @@ public class ScreenData {
 
     public void setImage(DynamicTexture image) {
         this.image = image;
+        net.minecraft.client.Minecraft.getInstance().getTextureManager().register(textureId, image);
     }
 
     public void closeImage() {
         if (this.image != null) {
-            this.image.close();
+            net.minecraft.client.Minecraft.getInstance().getTextureManager().release(textureId);
+            this.image = null;
         }
     }
 

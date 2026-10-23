@@ -9,8 +9,13 @@ import net.neoforged.neoforge.client.event.RegisterClientCommandsEvent;
 import net.neoforged.neoforge.client.event.TextureAtlasStitchedEvent;
 
 public class ClientEvents {
+    public void registerPipelines(net.neoforged.neoforge.client.event.RegisterRenderPipelinesEvent event) {
+        event.registerPipeline(com.corosus.watut.client.WatutRenderPipelines.TRANSLUCENT);
+    }
 
     public void getRegisteredParticles(TextureAtlasStitchedEvent event) {
+        if (event.getAtlas().location().equals(net.minecraft.client.renderer.texture.TextureAtlas.LOCATION_PARTICLES))
+            com.corosus.watut.client.screen.ScreenParticleRenderer.getInstance().close();
         ParticleRegistry.textureAtlasUpload(event.getAtlas());
     }
 

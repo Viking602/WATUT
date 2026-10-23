@@ -28,8 +28,9 @@ public class WatutModNeoForge extends WatutMod {
         NeoForge.EVENT_BUS.addListener(this::onPlayerTick);
         NeoForge.EVENT_BUS.addListener(this::onPlayerJoin);
 
-        if (FMLEnvironment.dist.isClient()) {
+        if (FMLEnvironment.getDist().isClient()) {
             ClientEvents clientEvents = new ClientEvents();
+            container.getEventBus().addListener(clientEvents::registerPipelines);
             container.getEventBus().addListener(clientEvents::getRegisteredParticles);
             NeoForge.EVENT_BUS.addListener(clientEvents::onRegisterCommandsClient);
             NeoForge.EVENT_BUS.addListener(clientEvents::onGameTick);
@@ -44,7 +45,7 @@ public class WatutModNeoForge extends WatutMod {
     }
 
     public void registerPackets(final RegisterPayloadHandlersEvent event) {
-        final PayloadRegistrar registrar = event.registrar("1.0.0");
+        final PayloadRegistrar registrar = event.registrar("26.1.2-v1");
         WatutNetworkingNeoForge.register(registrar);
     }
 
@@ -74,6 +75,6 @@ public class WatutModNeoForge extends WatutMod {
 
     @Override
     public float getFarPlane() {
-        return ClientHooks.getGuiFarPlane();
+        return 11000F;
     }
 }

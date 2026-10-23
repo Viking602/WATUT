@@ -1,8 +1,7 @@
 {
   "pack": {
-    "description": {
-      "text": "${mod_id} resources"
-    },
-    "pack_format": 15
+    "description": "WATUT resources",
+    "min_format": 84,
+    "max_format": [101, 1]
   }
 }

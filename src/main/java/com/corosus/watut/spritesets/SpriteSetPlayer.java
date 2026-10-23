@@ -8,6 +8,8 @@ import java.util.List;
 
 public class SpriteSetPlayer implements SpriteSet {
 
+    @Override public TextureAtlasSprite first() { return list.getFirst(); }
+
     private int tickDelay;
     private int frames;
     private List<TextureAtlasSprite> list;

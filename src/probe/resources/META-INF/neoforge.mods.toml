@@ -1,0 +1,10 @@
+modLoader="javafml"
+loaderVersion="[11,)"
+license="All Rights Reserved"
+[[mods]]
+modId="watut_port_probe"
+version="1.0.0"
+displayName="WATUT port verification"
+authors="viking602"
+[[mixins]]
+config="watut_port_probe.mixins.json"

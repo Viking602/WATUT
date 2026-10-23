@@ -1,0 +1,53 @@
+plugins {
+    id 'java-library'
+    id 'net.neoforged.moddev' version '2.0.148'
+}
+version = mod_version
+group = maven_group
+base { archivesName = mod_id + '-neoforge' }
+java.toolchain.languageVersion = JavaLanguageVersion.of(25)
+neoForge {
+    version = neo_version
+    runs {
+        client { client(); gameDirectory = file('../test-watut-dev-client') }
+        server { server(); gameDirectory = file('../test-watut-dev-server'); programArgument '--nogui' }
+        configureEach { logLevel = org.slf4j.event.Level.INFO }
+    }
+    mods { "${mod_id}" { sourceSet sourceSets.main } }
+}
+sourceSets.main.java {
+    exclude 'com/corosus/**/loader/fabric/**'
+    exclude 'com/corosus/**/loader/forge/**'
+    exclude '**/ParticleEngineMixinFabric.java'
+    exclude '**/ShaderInstanceBlur.java', '**/GameRendererReloadShaders.java', '**/PostChainResize.java', '**/ParticleEngineMixin.java'
+    exclude '**/RenderPingIconInject.java'
+}
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.compilerArgs += ['-Xmaxerrs', '500']
+}
+def metadata = [minecraft_version: minecraft_version,
+    minecraft_version_range: minecraft_version_range,
+    neo_version: neo_version, neo_version_range: neo_version_range,
+    loader_version_range: neo_loader_version_range,
+    mod_id: mod_id, mod_name: mod_name, mod_license: mod_license,
+    mod_version: mod_version, mod_authors: mod_authors,
+    mod_description: mod_description]
+def generateModMetadata = tasks.register('generateModMetadata', ProcessResources) {
+    inputs.properties metadata
+    expand metadata
+    from 'src/main/templates'
+    into 'build/generated/sources/modMetadata'
+}
+sourceSets.main.resources.srcDir generateModMetadata
+processResources {
+    exclude 'fabric.mod.json', 'META-INF/mods.toml', '**/*.accesswidener', '*_fabric.mixins.json'
+}
+dependencies { implementation project(':coroutil') }
+
+sourceSets { probe { compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath; runtimeClasspath += output + compileClasspath } }
+tasks.register('probeJar', Jar) { from sourceSets.probe.output; archiveFileName = 'watut-port-verification.jar' }
+if (project.hasProperty('verifyPort')) {
+ neoForge.mods { watut_port_probe { sourceSet sourceSets.probe } }
+ neoForge.runs.server { systemProperty 'watut.probeDir', file('../watut-port-20261011/server').absolutePath }
+}
